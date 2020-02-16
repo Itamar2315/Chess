@@ -3,8 +3,9 @@ from PIL import Image, ImageTk
 import chessboard
 
 
-class BoardGUI:
+class GUI:
     pieces = {}
+    selected_piece = None
     focused = None
     pictures = {}
     board_color1 = "#DDC3AA"
@@ -36,8 +37,8 @@ class BoardGUI:
     def new_game(self):
         self.chessboard.show(chessboard.START_PATTERN)
         self.draw_board()
-        # self.draw_pieces()
-        # self.info_label.config(text="   White's turn  ", fg='blue')
+        self.draw_pieces()
+        self.info_label.config(text="   White's turn  ", fg='blue')
 
     def square_clicked(self, event):
         col_size = row_size = self.square_size
@@ -47,10 +48,19 @@ class BoardGUI:
         # chess board's rows are arranged oppositely
         if chessboard.in_board(selected_column, selected_row):
             return selected_column, selected_row
+        if self.selected_piece:
+            self.shift(self.selected_piece[1], pos)
+            self.selected_piece = None
+            self.focused = None
+            self.pieces = {}
+            self.draw_board()
+            self.draw_pieces()
+        self.focus(pos)
+        self.draw_board()
         return -1, -1
 
     def selected_piece(self, column, row):
-        ''' this program is called only if the coordinates are inside the board '''
+        """ this program is called only if the coordinates are inside the board """
         pass
 
     def draw_board(self):
@@ -70,12 +80,23 @@ class BoardGUI:
 
                 else:
                     self.canvas.create_rectangle(p1_x, p1_y, p2_x, p2_y, fill=current_color)
+
                 current_color = self.board_color1 if current_color == self.board_color2 else self.board_color2
 
+                for piece_name in self.pieces:
+                    #
+                    self.pieces[piece_name] = (self.pieces[piece_name][0], self.pieces[piece_name][1])
+                    x = (self.pieces[piece_name][1] * self.dim_square) + int(self.dim_square / 2)
+                    y = ((7 - self.pieces[piece_name][0]) * self.dim_square) + int(self.dim_square / 2)
+                    self.canvas.coords(piece_name, x, y)
+                self.canvas.tag_raise("occupied")
+                self.canvas.tag_lower("area")
+
     def draw_pieces(self):
+        print("entered")
         self.canvas.delete("occupied")
-        for coordinate, piece in self.chessboard.items():
-            x, y = self.chessboard.num_notation(coordinate)
+        for coord, piece in self.chessboard.items():
+            x, y = self.chessboard.num_notation(coord)
             if piece is not None:
                 filename = "pieces_image/%s%s.png" % (piece.color, piece_name)
                 piecename = "%s%s%s" % (piece_name, x, y)
@@ -86,13 +107,13 @@ class BoardGUI:
                                          anchor="c")
                 x0 = (y * self.dim_square) + int(self.dim_square / 2)
                 y0 = ((7 - x) * self.dim_square) + int(self.dim_square / 2)
-                self.canvas.coordinates(piecename, x0, y0)
+                self.canvas.coords(piecename, x0, y0)
 
 
 def main(chessboard):
     root = Tk()
     root.title("Chess")
-    gui = BoardGUI(root, root)
+    gui = GUI(root, chessboard)
     gui.draw_board()
     gui.draw_pieces()
     root.mainloop()
