@@ -11,16 +11,15 @@ Short_Name = {
 }
 
 """
-def create_piece(piece):
-    ''' gets a piece and creates an instance of it '''
-    if piece_isupper():
+def create_piece(self, piece, color='black'):
+    """Receives a piece name and returns an instance of it"""
+    # if piece is None: return
+    if piece.isupper():
         color = 'white'
     else:
         color = 'black'
     piece = Short_Name[piece.upper()]
-    modu
 """
-
 
 class Piece(object):
     def __init__(self):
