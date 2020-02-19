@@ -10,16 +10,6 @@ Short_Name = {
     "P": "Pawn"
 }
 
-"""
-def create_piece(self, piece, color='black'):
-    """Receives a piece name and returns an instance of it"""
-    # if piece is None: return
-    if piece.isupper():
-        color = 'white'
-    else:
-        color = 'black'
-    piece = Short_Name[piece.upper()]
-"""
 
 class Piece(object):
     def __init__(self):
@@ -28,6 +18,16 @@ class Piece(object):
         else:
             color = 'black'
         piece = Short_Name[piece.upper()]
+
+    def create_piece_instance(self, piece, color='black'):
+        """Receives a piece name and returns an instance of it"""
+        # if piece is None: return
+        if piece.isupper():
+            color = 'white'
+        else:
+            color = 'black'
+        piece = Short_Name[piece.upper()]
+
 
 
 

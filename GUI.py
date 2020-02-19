@@ -19,8 +19,6 @@ class GUI:
         self.chessboard = chessboard
         self.parent = parent
 
-
-
         # Adding Frame
         self.btmfrm = Frame(parent, height=64)
         self.info_label = Label(self.btmfrm, text="   White to Start the Game  ", fg='blue')
