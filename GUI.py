@@ -96,15 +96,15 @@ class GUI:
         for coord, piece in self.chessboard.items():
             x, y = self.chessboard.num_notation(coord)
             if piece is not None:
-                filename = "pieces_image/%s%s.png" % (piece.color, piece_name)
-                piecename = "%s%s%s" % (piece_name, x, y)
-                if filename not in self.images:
-                    self.images[filename] = tk.PhotoImage(file=filename)
-                self.canvas.create_image(0, 0, image=self.images[filename],
+                filename = "Pieces_pictures/%s%s.png" % (piece.color, piece.name)
+                piecename = "%s%s%s" % (piece.name, x, y)
+                if filename not in self.pictures:
+                    self.pictures[filename] = PhotoImage(file=filename)
+                self.canvas.create_image(0, 0, image=self.pictures[filename],
                                          tags=(piecename, "occupied"),
                                          anchor="c")
-                x0 = (y * self.dim_square) + int(self.dim_square / 2)
-                y0 = ((7 - x) * self.dim_square) + int(self.dim_square / 2)
+                x0 = (y * self.square_size) + int(self.square_size / 2)
+                y0 = ((7 - x) * self.square_size) + int(self.square_size / 2)
                 self.canvas.coords(piecename, x0, y0)
 
 
