@@ -57,10 +57,6 @@ class GUI:
         self.draw_board()
         return -1, -1
 
-    def selected_piece(self, column, row):
-        """ this program is called only if the coordinates are inside the board """
-        pass
-
     def draw_board(self):
         current_color = self.board_color1
         for col in range(self.columns):
