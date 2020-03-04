@@ -36,7 +36,7 @@ class Board(dict):
         return self.y_values[int(coords[1])] + str(int(coords[0]) + 1)
 
     def num_notation(self, coords):
-        """receives coordinates and returns its place on the matrix"""
+        """receives coordinates and returns its place on the matrix (G7 = (6, 6))"""
         return int(coords[1]) - 1, self.y_values.index(coords[0])
 
     def show(self, pattern):
