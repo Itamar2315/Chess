@@ -8,8 +8,8 @@ class GUI:
     selected_piece = None
     focused = None
     pictures = {}
-    board_color1 = "#DDC3AA"
-    board_color2 = "#AB5500"
+    board_color1 = "#E6CCAA"
+    board_color2 = "#A85A0D"
     highlight_color = "#808080"
     rows = 8
     columns = 8
@@ -87,7 +87,6 @@ class GUI:
                 self.canvas.tag_lower("area")
 
     def draw_pieces(self):
-        print("entered")
         self.canvas.delete("occupied")
         for coord, piece in self.chessboard.items():
             x, y = self.chessboard.num_notation(coord)

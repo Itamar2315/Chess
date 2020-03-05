@@ -21,13 +21,15 @@ class Board(dict):
     START_PATTERN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 1'
     pattern_list = START_PATTERN.split(" ")
 
-    def __init__(self, pattern=None):
+    def __init__(self):
+        """creates the starting board"""
+        super().__init__()
         self.show(self.pattern_list)
 
     def move(self, p1, p2):
         piece = self[p1]
         if p2 in Pieces.possible_moves(p1):
-            self.p2 = piece
+            self[p2] = piece
 
     def alpha_notation(self, coords):
         """receives coordinates and returns its place on the board (6,6) = ('G', 7)"""
@@ -55,7 +57,7 @@ class Board(dict):
                     continue
                 coord = self.alpha_notation((7 - x, y))
                 self[coord] = Pieces.create_piece_instance(char)
-                self[coord].place(self)
+                self[coord].board = self
 
         """
         def show(self, pat):

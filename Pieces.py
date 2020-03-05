@@ -1,7 +1,7 @@
 import sys
 
 
-def create_piece_instance(piece, color='black'):
+def create_piece_instance(piece, color='black', board=None):
     """Receives a piece name and returns an instance of it"""
     if piece is (None or ' '):
         return
@@ -12,7 +12,7 @@ def create_piece_instance(piece, color='black'):
             color = 'Black'
         piece = Piece.Short_Name[piece.upper()]
     module = sys.modules[__name__]
-    return module.__dict__[piece](color)
+    return module.__dict__[piece](color, board)
 
 
 class Piece(object):
@@ -25,7 +25,7 @@ class Piece(object):
         "P": "Pawn"
     }
 
-    def __init__(self, color):
+    def __init__(self, color, board=None):
         if color == 'Black':
             self.name = self.name.lower()
         elif color == 'White':
@@ -37,9 +37,10 @@ class Piece(object):
         """receives a set of variables and return the possible moves of each piece"""
         board = self.board
         moves = []
+        unchecked_moves = ()
         line = ((0, 1), (1, 0), (-1, 0), (0, -1))
-        diagonal = ((1, 1), (-1, 1), (1, -1), (-1, -1))
-        starting_pos = board.num_notation
+        diag = ((1, 1), (-1, 1), (1, -1), (-1, -1))
+        starting_pos = board.num_notation(pos.upper())
         if line_movemant and diagonal_movemant:
             unchecked_moves = line + diag
         elif diagonal_movemant:
@@ -65,32 +66,68 @@ class Piece(object):
 
 class King(Piece):
     name = 'k'
-    moves = None
+
+    def available_moves(self, pos):
+        return super(King, self).moves(pos.upper(), True, True, 1)
 
 
 class Queen(Piece):
     name = 'q'
-    moves = None
+
+    def available_moves(self, pos):
+        return super(Queen, self).moves(pos.upper(), True, True, 8)
 
 
 class Rook(Piece):
     name = 'r'
-    moves = None
+
+    def available_moves(self, pos):
+        return super(Rook, self).moves(pos.upper(), True, False, 8)
 
 
 class Bishop(Piece):
     name = 'b'
-    moves = None
+
+    def available_moves(self, pos):
+        return super(Bishop, self).moves(pos.upper(), False, True, 8)
 
 
 class Knight(Piece):
     name = 'n'
-    moves = None
+
+    def available_moves(self, pos):
+        moves = []
+        unchecked_moves = ((1, 2), (-1, 2), (1, -2), (-1, -2), (2, 1), (-2, 1), (2, -1), (-2, -1))
+        starting_pos = board.num_notation(pos.upper())
+        for (x, y) in unchecked_moves:
+            destination = starting_pos[0] + (x, y)
+            if self.board.alpha_notation(destination) not in self.board.occupied('white') or self.board.occupied('black'):
+                moves.append(destination)
+            elif self.board.alpha_notation(destination) not in self.board.occupied(self.color):
+                # capture
+                moves.append(destination)
+                blocked = True
+        return map(board.num_notation, moves)  # instead of iterating over moves we can use map
 
 
 class Pawn(Piece):
     name = 'p'
-    moves = None
+
+    def available_moves(self, pos):
+        moves = []
+        unchecked_moves = (())
+        starting_pos = board.num_notation(pos.upper())
+        for (x, y) in unchecked_moves:
+            destination = starting_pos[0] + (x, y)
+            if self.board.alpha_notation(destination) not in self.board.occupied('white') or self.board.occupied(
+                    'black'):
+                moves.append(destination)
+            elif self.board.alpha_notation(destination) not in self.board.occupied(self.color):
+                # capture
+                moves.append(destination)
+                blocked = True
+        return map(board.num_notation, moves)  # instead of iterating over moves we can use map
+
 
 
 
