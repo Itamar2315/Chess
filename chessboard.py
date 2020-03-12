@@ -32,13 +32,13 @@ class Board(dict):
             self[p2] = piece
 
     def alpha_notation(self, coords):
-        """receives coordinates and returns its place on the board (6,6) = ('G', 7)"""
+        """receives numbered coordinates and returns its place on the board (6,6) = ('G', 7)"""
         if not (0 <= coords[0] <= 7 and 0 <= coords[1] <= 7):
             return None
         return self.y_values[int(coords[1])] + str(int(coords[0]) + 1)
 
     def num_notation(self, coords):
-        """receives coordinates and returns its place on the matrix (G7 = (6, 6))"""
+        """receives lettered coordinates and returns its place on the matrix (G7 = (6, 6))"""
         return int(coords[1]) - 1, self.y_values.index(coords[0])
 
     def show(self, pattern):

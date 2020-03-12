@@ -38,24 +38,47 @@ class GUI:
         self.draw_pieces()
         self.info_label.config(text="   White's turn  ", fg='blue')
 
+    def move(self, pos1, pos2):
+        piece = self.chessboard[1]
+        print("piece: ", piece)
+        if pos2 in piece.avaiable_moves(self, pos1):
+            pass
+
     def square_clicked(self, event):
         col_size = row_size = self.square_size
         selected_column = int(event.x / col_size)
         # because the size of the board is column * square_size
         selected_row = 7 - int(event.y / row_size)
         # chess board's rows are arranged oppositely
-        if chessboard.in_board(selected_column, selected_row):
-            return selected_column, selected_row
+        pos = self.chessboard.alpha_notation((selected_row, selected_column))
+        print("pos: ", pos)
+        if chessboard.in_board(selected_row, selected_column):
+            if pos in self.chessboard:
+                print(self.chessboard)
+                piece = self.chessboard[pos]
         if self.selected_piece:
-            self.shift(self.selected_piece[1], pos)
+            self.move(self.selected_piece[1], pos)
             self.selected_piece = None
             self.focused = None
             self.pieces = {}
             self.draw_board()
             self.draw_pieces()
-        self.focus(pos)
+        self.viable_piece_to_move(selected_row, selected_column)
         self.draw_board()
-        return -1, -1
+
+    def viable_piece_to_move(self, row, column):
+        """ if the piece can move it will put its value in selected_piece"""
+        if chessboard.in_board(column, row):
+            pos = self.chessboard.alpha_notation((row, column))
+            if pos in self.chessboard:
+                piece = self.chessboard[pos]
+            else:
+                return
+        if piece and piece.color == self.chessboard.player_turn:
+            print("piece: ", piece)
+            print(self.chessboard[pos], pos)
+            self.selected_piece = piece
+            self.focused = list(map(self.chessboard.num_notation, self.chessboard[pos].moves_available(pos)))
 
     def draw_board(self):
         current_color = self.board_color1
@@ -70,8 +93,8 @@ class GUI:
                 p2_y = p1_y + self.square_size
 
                 if self.focused is not None and (row, col) in self.focused:
-                    pass
-
+                    # highlights the piece's possible moves
+                    self.canvas.create_rectangle(p1_x, p1_y, p2_x, p2_y, fill=self.highlight_color, tags=area)
                 else:
                     self.canvas.create_rectangle(p1_x, p1_y, p2_x, p2_y, fill=current_color)
 
@@ -115,4 +138,3 @@ def main(chessboard):
 if __name__ == "__main__":
     game = chessboard.Board()
     main(game)
-
