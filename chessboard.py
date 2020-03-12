@@ -26,9 +26,42 @@ class Board(dict):
         super().__init__()
         self.show(self.pattern_list)
 
+    def all_available_moves(self, color):
+        """ returns all the available moves for a player"""
+        all_moves = []
+        # iterating over dictionary's keys to return its available moves
+        for coord in self.keys():
+            if (self[coord] is not None) and self[coord].color == color:
+                moves = self[coord].available_moves(coord)
+                if moves:
+                    all_moves += moves
+        return all_moves
+    
+    def shift (self, pos1, pos2):
+        pos1 = pos1.upper()
+        pos2 = pos2.upper()
+        piece = self[pos1]
+        if pos2 in self:
+            destination = pos2
+        else:
+            destination = None
+        if self.player_turn != piece.color:
+            print("Not %s's turn!" % piece.color)
+        if piece.color == "black":
+            enemy = "white"
+        else:
+            enemy = "black"
+        available_moves = piece.available_moves(pos1)
+        if p2 not in available_moves:
+            print("illegal move")
+        """
+        if self.all_available_moves(enemy):
+            if self.all
+        """
+
     def move(self, p1, p2):
         piece = self[p1]
-        if p2 in Pieces.possible_moves(p1):
+        if p2 in p1.available_moves:
             self[p2] = piece
 
     def alpha_notation(self, coords):
@@ -53,11 +86,18 @@ class Board(dict):
         for x, row in enumerate(pattern[0].split('/')):
             for y, char in enumerate(row):
                 if char == ' ':
-                    # skip
-                    continue
-                coord = self.alpha_notation((7 - x, y))
-                self[coord] = Pieces.create_piece_instance(char)
-                self[coord].board = self
+                    coord = self.alpha_notation((7 - x, y))
+
+                    self[coord] = Pieces.create_piece_instance(char)
+                    self[coord].place(self)
+
+        if pat[1] == 'w':
+            self.player_turn = 'white'
+        else:
+            self.player_turn = 'black'
+            
+        #self.halfmove_clock = int(pat[2])
+        #self.fullmove_number = int(pat[3])
 
         """
         def show(self, pat):

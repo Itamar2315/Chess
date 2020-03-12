@@ -26,13 +26,16 @@ class Piece(object):
     }
 
     def __init__(self, color, board=None):
-        if color == 'Black':
+        if color == 'black':
             self.name = self.name.lower()
-        elif color == 'White':
+        elif color == 'white':
             self.name = self.name.upper()
         self.color = color
         self.board = board
 
+    def place(self):
+        """places piece on the board"""
+        self.board = board
     def moves(self, pos, line_movemant, diagonal_movemant, distance):
         """receives a set of variables and return the possible moves of each piece"""
         board = self.board

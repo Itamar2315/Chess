@@ -21,7 +21,7 @@ class GUI:
 
         # Adding Frame
         self.btmfrm = Frame(parent, height=64)
-        self.info_label = Label(self.btmfrm, text="   White to Start the Game  ", fg='blue')
+        self.info_label = Label(self.btmfrm, text="   White's turn", fg='blue')
         self.info_label.pack(side=RIGHT, padx=8, pady=5)
         self.btmfrm.pack(fill="x", side=BOTTOM)
 
@@ -38,11 +38,14 @@ class GUI:
         self.draw_pieces()
         self.info_label.config(text="   White's turn  ", fg='blue')
 
-    def move(self, pos1, pos2):
-        piece = self.chessboard[1]
+
+    def shift(self, pos1, pos2):
+        # shift
+        piece = self.chessboard[pos1]
         print("piece: ", piece)
         if pos2 in piece.avaiable_moves(self, pos1):
             pass
+
 
     def square_clicked(self, event):
         col_size = row_size = self.square_size
@@ -57,7 +60,7 @@ class GUI:
                 print(self.chessboard)
                 piece = self.chessboard[pos]
         if self.selected_piece:
-            self.move(self.selected_piece[1], pos)
+            self.shift(self.selected_piece[1], pos)
             self.selected_piece = None
             self.focused = None
             self.pieces = {}
@@ -67,7 +70,9 @@ class GUI:
         self.draw_board()
 
     def viable_piece_to_move(self, row, column):
+        # focus
         """ if the piece can move it will put its value in selected_piece"""
+        print("focus")
         if chessboard.in_board(column, row):
             pos = self.chessboard.alpha_notation((row, column))
             if pos in self.chessboard:
@@ -81,6 +86,7 @@ class GUI:
             self.focused = list(map(self.chessboard.num_notation, self.chessboard[pos].moves_available(pos)))
 
     def draw_board(self):
+        print("entered")
         current_color = self.board_color1
         for col in range(self.columns):
             current_color = self.board_color1 if current_color == self.board_color2 else self.board_color2
@@ -91,23 +97,23 @@ class GUI:
 
                 p2_x = p1_x + self.square_size
                 p2_y = p1_y + self.square_size
-
-                if self.focused is not None and (row, col) in self.focused:
+                if self.focused and (row, col) in self.focused:
                     # highlights the piece's possible moves
-                    self.canvas.create_rectangle(p1_x, p1_y, p2_x, p2_y, fill=self.highlight_color, tags=area)
+                    print("torlalti")
+                    self.canvas.create_rectangle(p1_x, p1_y, p2_x, p2_y, fill=self.highlight_color, tags="area")
                 else:
-                    self.canvas.create_rectangle(p1_x, p1_y, p2_x, p2_y, fill=current_color)
+                    self.canvas.create_rectangle(p1_x, p1_y, p2_x, p2_y, fill=current_color, tags="area")
 
                 current_color = self.board_color1 if current_color == self.board_color2 else self.board_color2
 
-                for piece_name in self.pieces:
-                    #
-                    self.pieces[piece_name] = (self.pieces[piece_name][0], self.pieces[piece_name][1])
-                    x = (self.pieces[piece_name][1] * self.dim_square) + int(self.dim_square / 2)
-                    y = ((7 - self.pieces[piece_name][0]) * self.dim_square) + int(self.dim_square / 2)
-                    self.canvas.coords(piece_name, x, y)
-                self.canvas.tag_raise("occupied")
-                self.canvas.tag_lower("area")
+        for piece_name in self.pieces:
+            #
+            self.pieces[piece_name] = (self.pieces[piece_name][0], self.pieces[piece_name][1])
+            x = (self.pieces[piece_name][1] * self.dim_square) + int(self.dim_square / 2)
+            y = ((7 - self.pieces[piece_name][0]) * self.dim_square) + int(self.dim_square / 2)
+            self.canvas.coords(piece_name, x, y)
+        self.canvas.tag_raise("occupied")
+        self.canvas.tag_lower("area")
 
     def draw_pieces(self):
         self.canvas.delete("occupied")
