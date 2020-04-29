@@ -1,6 +1,6 @@
 from copy import deepcopy
 import re
-
+#import AI
 import Pieces
 
 # First letters of the different pieces in the correct order.
@@ -9,7 +9,8 @@ import Pieces
 class Board(dict):
     y_values = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H')
     x_values = (1, 2, 3, 4, 5, 6, 7, 8)
-    captured_pieces = {'white': [], 'black': []}
+    # captured_pieces = {'white': [], 'black': []}
+    captured_pieces = []
     player_turn = None
     halfmove_clock = 0
     fullmove_number = 1
@@ -22,16 +23,21 @@ class Board(dict):
         super().__init__()
         self.show(self.pattern_list)
 
-    def all_available_moves(self, color):
-        """ returns all the available moves for a player"""
+    def all_boards(self, color):
+        """ returns all the available boards(after moving) for a board"""
         all_moves = []
+        boards = []
         # iterating over dictionary's keys to return its available moves
         for coord in self.keys():
-            if (self[coord] is not None) and self[coord].color == color:
-                moves = self[coord].available_moves(coord)
-                if moves:
-                    all_moves += moves
-        return all_moves
+            if self[coord].color == color:
+                all_moves.append(self[coord].available_moves(coord))
+                available_moves = list(self[coord].available_moves(coord))
+                for pos in available_moves:
+                    board = deepcopy(self)
+                    board.move(coord, pos)
+                    boards.append(board)
+        return boards
+
     '''
     def shift(self, pos1, pos2):
         pos1 = pos1.upper()
@@ -55,6 +61,7 @@ class Board(dict):
             if self.all
         """
     '''
+
     def shift(self, p1, p2):
         p1, p2 = p1.upper(), p2.upper()
         piece = self[p1]
@@ -69,7 +76,7 @@ class Board(dict):
             print("invalid move")
         else:
             self.move(p1, p2)
-            #self.complete_move(piece, dest, p1, p2)
+            # self.complete_move(piece, dest, p1, p2)
 
     def in_board(self, coord):
         return 0 <= coord[0] < 8 and 0 <= coord[1] < 8
@@ -78,21 +85,93 @@ class Board(dict):
         piece = self[pos1]
         del self[pos1]
         # deletes pos1:piece from board's dictionary
+        if pos2 not in self:
+            captured = None
+        else:
+            captured = self[pos2]
+            self.captured_pieces.append(captured)
         self[pos2] = piece
-        enemy = ('white' if piece.color == 'black' else 'black')
+        enemy = ("white" if piece.color == "black" else "black")
         self.player_turn = enemy
-        if self.king_captured(pos2, enemy):
-            game_over()
-            return
+
+        if captured:
+            if captured.name == 'K':
+                pass
+                # GUI.game_over()
+                # return
+
         if piece.name == 'P':
-            if piece.color == 'white':
+            if piece.color == "white":
                 if pos2[1] == '8':
+                    # pawn becomes queen
                     del self[pos2]
-                    self[pos2] = Pieces.create_piece_instance('Q', piece.color, self)
+                    print("Write your preferable piece, Q/KN")
+                    prefer = ""
+                    while prefer != 'Q' or "KN":
+                        prefer = input()
+                        if prefer == 'Q':
+                            self[pos2] = Pieces.create_piece_instance('Q', piece.color, self)
+                        elif prefer == "KN":
+                            self[pos2] = Pieces.create_piece_instance('N', piece.color, self)
+                        else:
+                            print("Please type your preference again")
                     return
-        if piece.name == 'r' or piece.name == 'k':
-            if piece.didnt_move_yet:
-                self.castle(piece)
+            else:
+                if pos2[1] == '1':
+                    # pawn becomes queen
+                    del self[pos2]
+                    print("Write your preferable piece, Q/KN")
+                    prefer = ""
+                    while prefer != 'Q' or "KN":
+                        prefer = input()
+                        if prefer == 'Q':
+                            self[pos2] = Pieces.create_piece_instance('Q', piece.color, self)
+                        elif prefer == "KN":
+                            self[pos2] = Pieces.create_piece_instance('N', piece.color, self)
+                        else:
+                            print("Please type your preference again")
+                    return
+
+        if piece.name == 'K' and piece.didnt_move:
+            piece.didnt_move = False
+            diff = ord(pos2[0]) - ord(pos1[0])
+
+            if piece.color == "white":
+                if diff == 2:
+                    # move rook (castle)
+                    pos1 = "H1"
+                    pos2 = chr(ord(pos2[0]) - 1) + '1'
+                    piece = self[pos1]
+                    del self[pos1]
+                    self[pos2] = piece
+                elif diff == -2:
+                    # move rook (castle)
+                    pos1 = "A1"
+                    pos2 = chr(ord(pos2[0]) + 1) + '1'
+                    piece = self[pos1]
+                    del self[pos1]
+                    self[pos2] = piece
+
+            else:
+                if diff == 2:
+                    # move rook (castle)
+                    pos1 = "H8"
+                    pos2 = chr(ord(pos2[0]) - 1) + '8'
+                    piece = self[pos1]
+                    del self[pos1]
+                    self[pos2] = piece
+                elif diff == -2:
+                    # move rook (castle)
+                    pos1 = "A8"
+                    pos2 = chr(ord(pos2[0]) + 1) + '8'
+                    piece = self[pos1]
+                    del self[pos1]
+                    self[pos2] = piece
+
+        if piece.name == 'R':
+            piece.didnt_move = False
+
+        self.player_turn = enemy
 
     def alpha_notation(self, coords):
         """receives numbered coordinates and returns its place on the board (6,6) = ('G', 7)"""
@@ -112,15 +191,7 @@ class Board(dict):
             if self[coord].color == color:
                 result.append(coord)
         return result
-    
-    def king_captured(self, pos2, enemy):
-        if pos2 in self.occupied(enemy):
-            if self[pos2].name == 'K':
-                return True
-        return False
 
-    def game_over(self):
-        pass
 
     '''
     def complete_move(self, piece, dest, pos1, pos2):
@@ -143,8 +214,6 @@ class Board(dict):
         self.history.append(movetext)
     '''
 
-
-
     def show(self, pattern):
         """Receives pattern and creates it on the board"""
         self.clear()
@@ -165,12 +234,12 @@ class Board(dict):
                 self[coord].place(self)
 
         if pattern[1] == 'w':
-            self.player_turn = 'white'
+            self.player_turn = "white"
         else:
-            self.player_turn = 'black'
-            
-        #self.halfmove_clock = int(pat[2])
-        #self.fullmove_number = int(pat[3])
+            self.player_turn = "black"
+
+        # self.halfmove_clock = int(pat[2])
+        # self.fullmove_number = int(pat[3])
 
         """
         def show(self, pat):
@@ -201,13 +270,6 @@ class Board(dict):
         return self.y_axis[int(xycoord[1])] + str(self.x_axis[int(xycoord[0])])
         
         """
-
-
-
-
-
-
-
 
 
 

@@ -1,9 +1,10 @@
 from tkinter import *
-from PIL import Image, ImageTk
+from AI import *
 import chessboard
 
 
 class GUI:
+    turn = "white"
     pieces = {}
     selected_piece = None
     focused = None
@@ -15,13 +16,13 @@ class GUI:
     columns = 8
     square_size = 64
 
-    def __init__(self, parent, chessboard):
-        self.chessboard = chessboard
+    def __init__(self, parent, board):
+        self.chessboard = board
         self.parent = parent
 
         # Adding Frame
         self.btmfrm = Frame(parent, height=64)
-        self.info_label = Label(self.btmfrm, text="   White's turn", fg='blue')
+        self.info_label = Label(self.btmfrm, text="   White's turn", fg="blue")
         self.info_label.pack(side=RIGHT, padx=8, pady=5)
         self.btmfrm.pack(fill="x", side=BOTTOM)
 
@@ -33,10 +34,10 @@ class GUI:
         self.canvas.bind("<Button-1>", self.square_clicked)
 
     def new_game(self):
-        self.chessboard.show(chessboard.START_PATTERN)
+        self.chessboard.show(self.chessboard.START_PATTERN)
         self.draw_board()
         self.draw_pieces()
-        self.info_label.config(text="   White's turn  ", fg='blue')
+        self.info_label.config(text="   White's turn  ", fg="blue")
 
     def shift(self, pos1, pos2, dest_piece=None):
         # handles clicked piece situations
@@ -46,10 +47,11 @@ class GUI:
 
         if not dest_piece or dest_piece.color != piece.color:
             self.chessboard.shift(pos1, pos2)
-            turn = ('white' if piece.color == 'black' else 'black')
+            self.turn = ('white' if piece.color == 'black' else 'black')
             self.info_label[
-                "text"] = '' + piece.color.capitalize() + ": " + pos1 + "->" + pos2 + ',    ' + turn.capitalize() + \
-                          '\'s turn'
+                "text"] = '' + piece.color.capitalize() + ": " + pos1 + "->" + pos2 + ",    " + self.turn.capitalize() + \
+                          "\'s turn"
+
     '''
     def shift(self, p1, p2):
         piece = self.chessboard[p1]
@@ -75,11 +77,13 @@ class GUI:
         selected_row = 7 - int(event.y / row_size)
         # chess board's rows are arranged oppositely
         pos = self.chessboard.alpha_notation((selected_row, selected_column))
-        '''
+
+        """
         if self.chessboard.in_board((selected_row, selected_column)):
             if pos in self.chessboard:
                 piece = self.chessboard[pos]
-        '''
+        """
+
         if self.selected_piece:
             self.shift(self.selected_piece[1], pos)
             self.selected_piece = None
@@ -87,8 +91,24 @@ class GUI:
             self.pieces = {}
             self.draw_board()
             self.draw_pieces()
+
         self.viable_piece_to_move(pos)
         self.draw_board()
+
+        if self.turn == "black":
+            ai = AI(self.chessboard)
+            move = ai.ai_play()
+            self.turn = "white"
+            self.info_label[
+                "text"] = '' + "Black: " + move + ",    " + self.turn.capitalize() + \
+                          "\'s turn"
+            self.selected_piece = None
+            self.focused = None
+            self.pieces = {}
+            self.draw_board()
+            self.draw_pieces()
+            self.viable_piece_to_move(pos)
+            self.draw_board()
 
     def viable_piece_to_move(self, pos, piece=None):
         if pos in self.chessboard:
@@ -115,13 +135,14 @@ class GUI:
                     self.canvas.create_rectangle(p1_x, p1_y, p2_x, p2_y, fill=current_color, tags="area")
 
                 current_color = self.board_color1 if current_color == self.board_color2 else self.board_color2
-
+        """
         for piece_name in self.pieces:
             #
             self.pieces[piece_name] = (self.pieces[piece_name][0], self.pieces[piece_name][1])
-            x = (self.pieces[piece_name][1] * self.dim_square) + int(self.dim_square / 2)
-            y = ((7 - self.pieces[piece_name][0]) * self.dim_square) + int(self.dim_square / 2)
+            x = (self.pieces[piece_name][1] * self.square_size) + int(self.square_size / 2)
+            y = ((7 - self.pieces[piece_name][0]) * self.square_size) + int(self.square_size / 2)
             self.canvas.coords(piece_name, x, y)
+        """
         self.canvas.tag_raise("occupied")
         self.canvas.tag_lower("area")
 
@@ -142,10 +163,10 @@ class GUI:
                 self.canvas.coords(piecename, x0, y0)
 
 
-def main(chessboard):
+def main(board):
     root = Tk()
     root.title("Chess")
-    gui = GUI(root, chessboard)
+    gui = GUI(root, board)
     gui.draw_board()
     gui.draw_pieces()
     root.mainloop()
