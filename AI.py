@@ -26,6 +26,8 @@ class AI:
         score = 0
         for coord in board:
             score += self.sign[str(board[coord].color)] * self.piece_value[str(board[coord].name)]
+        if len(board) < 32:
+            print("yohoooo")
         return score
 
     """
@@ -60,6 +62,8 @@ class AI:
             boards = board.all_boards("black")
             min_score = float("inf")
             for next_board in boards:
+                if not next_board:
+                    print("what the shnatz")
                 score = self.minimax(next_board, depth - 1)[0]
                 if score < min_score:
                     min_score = score
@@ -70,6 +74,8 @@ class AI:
             boards = board.all_boards("white")
             max_score = float("-inf")
             for next_board in boards:
+                if not next_board:
+                    print("what the shnatz")
                 score = self.minimax(next_board, depth - 1)[0]
                 if score > max_score:
                     max_score = score
@@ -78,6 +84,7 @@ class AI:
 
     def ai_play(self):
         move = self.minimax(self.board, self.depth)[1]
+
         pos1 = ""
         for coord in self.board:
             if coord not in move:
@@ -85,7 +92,7 @@ class AI:
                 del self.board[coord]
                 break
         for coord in move:
-            if coord not in self.board:
+            if coord not in self.board or self.board[coord].color != move[coord].color:
                 self.board[coord] = move[coord]
                 self.board.player_turn = "white"
                 return pos1 + "->" + coord

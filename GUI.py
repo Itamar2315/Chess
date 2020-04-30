@@ -94,6 +94,7 @@ class GUI:
 
         self.viable_piece_to_move(pos)
         self.draw_board()
+        self.canvas.update()
 
         if self.turn == "black":
             ai = AI(self.chessboard)
