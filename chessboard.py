@@ -10,7 +10,7 @@ class Board(dict):
     y_values = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H')
     x_values = (1, 2, 3, 4, 5, 6, 7, 8)
     # captured_pieces = {'white': [], 'black': []}
-    captured_pieces = []
+    # captured_pieces = []
     player_turn = None
     halfmove_clock = 0
     fullmove_number = 1
@@ -65,17 +65,17 @@ class Board(dict):
     def shift(self, p1, p2):
         p1, p2 = p1.upper(), p2.upper()
         piece = self[p1]
-        if p2 in self:
-            dest = self[p2]
-        else:
-            dest = None
+
         if self.player_turn != piece.color:
             print("It's not your turn!")
+            return False
         moves_available = piece.available_moves(p1)
         if p2 not in moves_available:
             print("invalid move")
+            return False
         else:
             self.move(p1, p2)
+            return True
             # self.complete_move(piece, dest, p1, p2)
 
     def in_board(self, coord):
@@ -89,7 +89,7 @@ class Board(dict):
             captured = None
         else:
             captured = self[pos2]
-            self.captured_pieces.append(captured)
+            # self.captured_pieces.append(captured)
         self[pos2] = piece
         enemy = ("white" if piece.color == "black" else "black")
         self.player_turn = enemy
@@ -120,16 +120,7 @@ class Board(dict):
                 if pos2[1] == '1':
                     # pawn becomes queen
                     del self[pos2]
-                    print("Write your preferable piece, Q/KN")
-                    prefer = ""
-                    while prefer != 'Q' or "KN":
-                        prefer = input()
-                        if prefer == 'Q':
-                            self[pos2] = Pieces.create_piece_instance('Q', piece.color, self)
-                        elif prefer == "KN":
-                            self[pos2] = Pieces.create_piece_instance('N', piece.color, self)
-                        else:
-                            print("Please type your preference again")
+                    self[pos2] = Pieces.create_piece_instance('Q', piece.color, self)
                     return
 
         if piece.name == 'K' and piece.didnt_move:

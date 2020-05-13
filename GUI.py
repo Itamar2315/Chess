@@ -20,11 +20,21 @@ class GUI:
         self.chessboard = board
         self.parent = parent
 
-        # Adding Frame
-        self.btmfrm = Frame(parent, height=64)
-        self.info_label = Label(self.btmfrm, text="   White's turn", fg="blue")
+        # adding frame
+        self.mvframe = Frame(parent, height=64)
+        self.info_label = Label(self.mvframe, text="   White's turn", fg="blue")
         self.info_label.pack(side=RIGHT, padx=8, pady=5)
-        self.btmfrm.pack(fill="x", side=BOTTOM)
+        self.mvframe.pack(fill="x", side=BOTTOM)
+
+        # adding "new game" button
+        self.ngframe = Frame(parent, height=64)
+        self.ngbutton = Button(self.ngframe, text="New game", command=self.new_game)
+        self.ngbutton.pack(side=LEFT, padx=12)
+        self.ngframe.pack(fill="x", side=TOP)
+
+        self.rebutton = Button(self.ngframe, text="Resign")
+        self.rebutton.pack(side=LEFT, padx=30)
+        self.ngframe.pack(fill="x", side=TOP)
 
         canvas_height = self.rows * self.square_size
         canvas_width = self.columns * self.square_size
@@ -34,9 +44,9 @@ class GUI:
         self.canvas.bind("<Button-1>", self.square_clicked)
 
     def new_game(self):
-        self.chessboard.show(self.chessboard.START_PATTERN)
-        self.draw_board()
+        self.chessboard.show(self.chessboard.pattern_list)
         self.draw_pieces()
+        self.chessboard.player_turn = "white"
         self.info_label.config(text="   White's turn  ", fg="blue")
 
     def shift(self, pos1, pos2, dest_piece=None):
@@ -46,11 +56,12 @@ class GUI:
             dest_piece = self.chessboard[pos2]
 
         if not dest_piece or dest_piece.color != piece.color:
-            self.chessboard.shift(pos1, pos2)
-            self.turn = ('white' if piece.color == 'black' else 'black')
-            self.info_label[
-                "text"] = '' + piece.color.capitalize() + ": " + pos1 + "->" + pos2 + ",    " + self.turn.capitalize() + \
-                          "\'s turn"
+            played = self.chessboard.shift(pos1, pos2)
+            if played:
+                self.turn = ('white' if piece.color == 'black' else 'black')
+                self.info_label[
+                    "text"] = '' + piece.color.capitalize() + ": " + pos1 + "->" + pos2 + ",    " + self.turn.capitalize() + \
+                              "\'s turn"
 
     '''
     def shift(self, p1, p2):
