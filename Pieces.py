@@ -42,45 +42,46 @@ class Piece(object):
         if not self.didnt_move:
             return []
         if self.color == "white":
-            if pos[1] == '1' and ("A1" or "H1" in self.board):
-                x = 'B'
+            if pos[1] == "1" and ("A1" or "H1" in self.board):
+                x = "B"
                 y = pos[1]
                 while x != pos[0]:
                     if x + y in self.board:
                         break
                     x = chr(ord(x) + 1)
-                if x == 'E':
+                if x == "E":
                     moves.append(self.board.num_notation("C1"))
-                x = 'F'
-                while x != 'H':
+                x = "F"
+                while x != "H":
                     if x + y in self.board:
                         break
                     x = chr(ord(x) + 1)
-                if x == 'H':
-                    moves.append(self.board.num_notation('G1'))
+                if x == "H":
+                    moves.append(self.board.num_notation("G1"))
         else:
-            if pos[1] == '8' and ("A8" or "H8" in self.board):
-                x = 'B'
+            if pos[1] == "8" and ("A8" or "H8" in self.board):
+                x = "B"
                 y = pos[1]
                 while x != pos[0]:
                     if x + y in self.board:
                         break
                     x = chr(ord(x) + 1)
-                if x == 'E':
+                if x == "E":
                     moves.append(self.board.num_notation("C8"))
-                x = 'F'
-                while x != 'H':
+                x = "F"
+                while x != "H":
                     if x + y in self.board:
                         break
                     x = chr(ord(x) + 1)
-                if x == 'H':
+                if x == "H":
                     moves.append(self.board.num_notation("G8"))
         return moves
 
-    def available_moves(self, pos, line_movemant, diagonal_movemant, distance):
+    def available_moves(self, pos, line_movemant, diagonal_movemant, distance, board=None):
         """receives a set of variables and return the possible moves of each piece"""
         enemy = ("white" if self.color == "black" else "black")
-        board = self.board
+        if not board:
+            board = self.board
         moves = []
         unchecked_moves = ()
         line = ((0, 1), (1, 0), (-1, 0), (0, -1))
@@ -104,46 +105,46 @@ class Piece(object):
                         break
                 else:
                     break
-        if self.name == 'K':
+        if self.name == "K":
             moves = moves + self.castle(pos)
         return map(board.alpha_notation, moves)
         # instead of iterating over moves and alpha_notation it with map
 
 
 class King(Piece):
-    name = 'K'
+    name = "K"
     didnt_move = True
 
-    def available_moves(self, pos):
-        return super(King, self).available_moves(pos.upper(), True, True, 1)
+    def available_moves(self, pos, board):
+        return super(King, self).available_moves(pos.upper(), True, True, 1, board)
 
 
 class Queen(Piece):
-    name = 'Q'
+    name = "Q"
 
-    def available_moves(self, pos):
-        return super(Queen, self).available_moves(pos.upper(), True, True, 8)
+    def available_moves(self, pos, board):
+        return super(Queen, self).available_moves(pos.upper(), True, True, 8, board)
 
 
 class Rook(Piece):
-    name = 'R'
+    name = "R"
     didnt_move = True
 
-    def available_moves(self, pos):
-        return super(Rook, self).available_moves(pos.upper(), True, False, 8)
+    def available_moves(self, pos, board):
+        return super(Rook, self).available_moves(pos.upper(), True, False, 8, board)
 
 
 class Bishop(Piece):
-    name = 'B'
+    name = "B"
 
-    def available_moves(self, pos):
-        return super(Bishop, self).available_moves(pos.upper(), False, True, 8)
+    def available_moves(self, pos, board):
+        return super(Bishop, self).available_moves(pos.upper(), False, True, 8, board)
 
 
 class Knight(Piece):
-    name = 'N'
+    name = "N"
 
-    def available_moves(self, pos):
+    def available_moves(self, pos, board):
         board = self.board
         moves = []
         unchecked_moves = ((1, 2), (-1, 2), (1, -2), (-1, -2), (2, 1), (-2, 1), (2, -1), (-2, -1))
@@ -156,36 +157,36 @@ class Knight(Piece):
 
 
 class Pawn(Piece):
-    name = 'P'
+    name = "P"
     # change after moving
 
-    def available_moves(self, pos):
+    def available_moves(self, pos, board):
         enemy = ("white" if self.color == "black" else "black")
         didnt_move = False
-        board = self.board
+        self.board = board
         moves = []
         if self.color == "white":
             regular_move = (1, 0)
             first_move = (2, 0)
             capture = ((1, -1), (1, 1))
-            if pos[1] == '2':
+            if pos[1] == "2":
                 didnt_move = True
         else:
             regular_move = (-1, 0)
             first_move = (-2, 0)
             capture = ((-1, -1), (-1, 1))
-            if pos[1] == '7':
+            if pos[1] == "7":
                 didnt_move = True
 
         starting_pos = board.num_notation(pos.upper())
         destination = self.board.alpha_notation((starting_pos[0] + regular_move[0], starting_pos[1] + regular_move[1]))
         # regular and first moves column value is always 0
-        if destination not in board.occupied("white") and destination not in board.occupied('black'):
+        if destination not in board.occupied("white") and destination not in board.occupied("black"):
             # if destination not occupied, if first square is taken we can't move to the next one
             moves.append(self.board.num_notation(destination))
             destination = self.board.alpha_notation((starting_pos[0] + first_move[0], starting_pos[1] + first_move[1]))
             # pawn's first move
-            if destination not in board.occupied("white") and destination not in board.occupied('black') and didnt_move:
+            if destination not in board.occupied("white") and destination not in board.occupied("black") and didnt_move:
                 moves.append(self.board.num_notation(destination))
 
         capture_dest = board.alpha_notation((starting_pos[0] + capture[0][0], starting_pos[1] + capture[0][1]))

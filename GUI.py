@@ -46,6 +46,7 @@ class GUI:
     def new_game(self):
         self.chessboard.show(self.chessboard.pattern_list)
         self.draw_pieces()
+        self.selected_piece = None
         self.chessboard.player_turn = "white"
         self.info_label.config(text="   White's turn  ", fg="blue")
 
@@ -56,7 +57,7 @@ class GUI:
             dest_piece = self.chessboard[pos2]
 
         if not dest_piece or dest_piece.color != piece.color:
-            played = self.chessboard.shift(pos1, pos2)
+            played = self.chessboard.shift(pos1, pos2, True)
             if played:
                 self.turn = ('white' if piece.color == 'black' else 'black')
                 self.info_label[
@@ -121,13 +122,26 @@ class GUI:
             self.draw_pieces()
             self.viable_piece_to_move(pos)
             self.draw_board()
+        """
+        if self.selected_piece:
+            self.shift(self.selected_piece[1], pos)
+            self.selected_piece = None
+            self.focused = None
+            self.pieces = {}
+            self.draw_board()
+            self.draw_pieces()
+
+        self.viable_piece_to_move(pos)
+        self.draw_board()
+        self.canvas.update()
+        """
 
     def viable_piece_to_move(self, pos, piece=None):
         if pos in self.chessboard:
             piece = self.chessboard[pos]
         if piece is not None and (piece.color == self.chessboard.player_turn):
             self.selected_piece = (self.chessboard[pos], pos)
-            self.focused = list(map(self.chessboard.num_notation, (self.chessboard[pos].available_moves(pos))))
+            self.focused = list(map(self.chessboard.num_notation, (self.chessboard[pos].available_moves(pos, self.chessboard))))
             
     def draw_board(self):
         current_color = self.board_color1
