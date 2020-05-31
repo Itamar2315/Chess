@@ -1,13 +1,10 @@
-from chessboard import *
-
 class AI:
     depth = 2
-    counter = 0
+    is_opening = False
 
     def __init__(self, board):
         self.board = board
         self.moves = self.board.all_boards("black")
-
 
     sign = {
         "white": -1,
@@ -25,85 +22,114 @@ class AI:
 
     def scoring(self, board):
         score = 0
-        black_n = 0
-        white_n = 0
         for coord in board:
             name = board[coord].name
             color = board[coord].color
-            if color == 'black':
-                black_n = black_n + 1
-            if color == 'white':
-                white_n = white_n + 1
             score += self.sign[color] * self.piece_value[name]
-        print("white =", white_n, " black = ", black_n)
+            if name == "P":
+                pos = board.num_notation(coord)
+                score += 70 - (abs(pos[0] - 3.5) + abs(pos[1] - 3.5))
+
         return score
 
-    def minimax(self, board, depth, player_turn, alpha, beta):
-        self.counter += 1
+    def minimax_no_board(self, board, depth, color, alpha, beta):
         if depth == 0:
-            #if self.scoring(board) != 0:
-            print("score = ", self.scoring(board), board.tolist("white"), "  ", board.missing_pieces("white"), " ", board.tolist("black"), "  ", board.missing_pieces("black"))
             return self.scoring(board)
 
-        if player_turn == "black":
-            max_score = float("-inf")
+        if color == "black":
             boards = board.all_boards("black")
-            for next_board in boards:
-                score = self.minimax(next_board, depth - 1, "white", alpha, beta)
-                max_score = max(max_score, score)
+            max_score = float("-inf")
+            for board in boards:
+                score = self.minimax_no_board(board, depth - 1, "white", alpha, beta)
+                max_score = max(score, max_score)
                 alpha = max(alpha, max_score)
-                #if beta < alpha:
-                #    break
+                if beta <= alpha:
+                    break
             return max_score
 
         else:
-            min_score = float("inf")
             boards = board.all_boards("white")
-            for next_board in boards:
-                score = self.minimax(next_board, depth - 1, "black", alpha, beta)
-                min_score = min(min_score, score)
-                beta = min(beta, score)
-                #if beta < alpha:
-                #    break
+            min_score = float("inf")
+            for board in boards:
+                score = self.minimax_no_board(board, depth - 1, "black", alpha, beta)
+                min_score = min(score, min_score)
+                beta = min(beta, min_score)
+                if beta <= alpha:
+                    break
             return min_score
 
+    def minimax(self, board, depth, color, alpha, beta):
+        if depth == 0:
+            return self.scoring(board), board
+
+        if color == "black":
+            boards = board.all_boards("black")
+            best_board = boards[0]
+            max_score = float("-inf")
+            for board in boards:
+                score = self.minimax(board, depth - 1, "white", alpha, beta)[0]
+                if score > max_score:
+                    max_score = score
+                    best_board = board
+                alpha = max(alpha, max_score)
+                if beta <= alpha:
+                    break
+            return max_score, best_board
+
+        else:
+            boards = board.all_boards("white")
+            best_board = boards[0]
+            min_score = float("inf")
+            for board in boards:
+                score = self.minimax(board, depth - 1, "black", alpha, beta)[0]
+                if score < min_score:
+                    min_score = score
+                    best_board = board
+                beta = min(beta, min_score)
+                if beta <= alpha:
+                    break
+            return min_score, best_board
+
     def ai_play(self):
-        self.counter = 0
+        """
+        opening = []
+        for move in self.opening_moves:
+            move, destination = move[:len(move) // 2], move[len(move) // 2:]
+            if move in self.board:
+                open_board = deepcopy(self.board)
+                piece = open_board[move]
+                del open_board[move]
+                open_board[destination] = piece
+                opening.append(open_board)
+        """
+        """
         moves = self.board.all_boards("black")
         best_score = float("-inf")
         best_move = moves[0]
+        print("depth = ", self.depth)
         for move in moves:
-            if 'H4' in move:
-                print("here")
-            score = self.minimax(move, self.depth, "black", float("inf"), float("-inf"))
-            print("counter = ", self.counter)
-            if score >= best_score:
+            move.captured_pieces = move.missing_pieces("black")
+            score = self.minimax_no_board(move, self.depth, "white", float("-inf"), float("inf"))
+            if score > best_score:
                 best_score = score
                 best_move = move
-            print("ai_ score ", score, move)
         """
-        best_score = self.minimax(self.board, self.depth, "black")
-        best_move = None
-        scores = []
-        moves = self.board.all_boards("black")[0]
-        for move in moves:
-            scores.append(self.scoring(move))
-            if self.scoring(move) == best_score:
-                best_move = move
 
-        print("scores: ", scores)
-        """
-        pos1 = ""
+        self.depth = 3 + (32 - len(self.board)) // 4
+        # after 4 pieces have been captured increase depth by 1
+        best_move = self.minimax(self.board, self.depth, "black", float("-inf"), float("inf"))[1]
+        pos = ""
         for coord in self.board:
             if coord not in best_move:
-                pos1 = coord
+                pos = coord
                 del self.board[coord]
                 break
         for coord in best_move:
             if coord not in self.board or self.board[coord].color != best_move[coord].color:
+                # if a coordinate isn't in self.board
                 self.board[coord] = best_move[coord]
                 self.board.player_turn = "white"
-                return pos1 + "->" + coord
+                return pos + "->" + coord
 
 
 

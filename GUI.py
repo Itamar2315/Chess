@@ -1,6 +1,7 @@
 from tkinter import *
+import Chessboard
+from copy import deepcopy
 from AI import *
-import chessboard
 
 
 class GUI:
@@ -34,6 +35,7 @@ class GUI:
 
         self.rebutton = Button(self.ngframe, text="Resign")
         self.rebutton.pack(side=LEFT, padx=30)
+        self.rebutton.bind("<Button-1>", self.game_over)
         self.ngframe.pack(fill="x", side=TOP)
 
         canvas_height = self.rows * self.square_size
@@ -42,13 +44,14 @@ class GUI:
         self.canvas.pack(padx=8, pady=8)
         self.draw_board()
         self.canvas.bind("<Button-1>", self.square_clicked)
+        self.promotion_label = None
 
-    def new_game(self):
-        self.chessboard.show(self.chessboard.pattern_list)
-        self.draw_pieces()
-        self.selected_piece = None
-        self.chessboard.player_turn = "white"
-        self.info_label.config(text="   White's turn  ", fg="blue")
+    def new_game(self, event=None):
+        self.canvas.destroy()
+        self.info_label.destroy()
+        self.ngframe.destroy()
+        self.mvframe.destroy()
+        start_game()
 
     def shift(self, pos1, pos2, dest_piece=None):
         # handles clicked piece situations
@@ -63,25 +66,9 @@ class GUI:
                 self.info_label[
                     "text"] = '' + piece.color.capitalize() + ": " + pos1 + "->" + pos2 + ",    " + self.turn.capitalize() + \
                               "\'s turn"
+                if self.chessboard.is_game_over():
+                    self.game_over()
 
-    '''
-    def shift(self, p1, p2):
-        piece = self.chessboard[p1]
-        try:
-            dest_piece = self.chessboard[p2]
-        except:
-            dest_piece = None
-        if dest_piece is None or dest_piece.color != piece.color:
-            try:
-                self.chessboard.shift(p1, p2)
-            except chessboard.ChessError as error:
-                self.info_label["text"] = error.__class__.__name__
-            else:
-                turn = ('white' if piece.color == 'black' else 'black')
-                self.info_label[
-                    "text"] = '' + piece.color.capitalize() + ": " + p1 + "->" + p2 + ',    ' + turn.capitalize() +\
-                              '\'s turn'
-        '''
     def square_clicked(self, event):
         col_size = row_size = self.square_size
         selected_column = int(event.x / col_size)
@@ -89,13 +76,6 @@ class GUI:
         selected_row = 7 - int(event.y / row_size)
         # chess board's rows are arranged oppositely
         pos = self.chessboard.alpha_notation((selected_row, selected_column))
-
-        """
-        if self.chessboard.in_board((selected_row, selected_column)):
-            if pos in self.chessboard:
-                piece = self.chessboard[pos]
-        """
-
         if self.selected_piece:
             self.shift(self.selected_piece[1], pos)
             self.selected_piece = None
@@ -107,6 +87,9 @@ class GUI:
         self.viable_piece_to_move(pos)
         self.draw_board()
         self.canvas.update()
+        for coord in self.chessboard:
+            # updating piece's board
+            self.chessboard[coord].place(self.chessboard)
 
         if self.turn == "black":
             ai = AI(self.chessboard)
@@ -120,28 +103,39 @@ class GUI:
             self.pieces = {}
             self.draw_board()
             self.draw_pieces()
-            self.viable_piece_to_move(pos)
-            self.draw_board()
-        """
-        if self.selected_piece:
-            self.shift(self.selected_piece[1], pos)
-            self.selected_piece = None
-            self.focused = None
-            self.pieces = {}
-            self.draw_board()
-            self.draw_pieces()
+            if self.chessboard.is_game_over():
+                self.game_over()
 
-        self.viable_piece_to_move(pos)
-        self.draw_board()
-        self.canvas.update()
-        """
+    def pawn_promotion(self):
+        self.canvas.unbind("<Button-1>")
+        self.promotion_label = Label(root, text="pick your desired piece", font=("ariel", 26))
+        self.promotion_label.place(relx=0.5, rely=0.5, anchor="center")
 
+        quinn_button = Button(self.promotion_label, image="Pieces_pictures/%sQuinn.png" % (self.turn[0]))
+        quinn_button.pack(side=LEFT, padx=30)
+        quinn_button.bind("<Button-1>", self.pawn_promotion_quinn)
+
+        knight_button = Button(self.promotion_label, image="Pieces_pictures/%sKnight.png" % (self.turn[0]))
+        knight_button.pack(side=LEFT, padx=30)
+        knight_button.bind("<Button-1>", self.pawn_promotion_knight)
+    """
+    def pawn_promotion_quinn(self, event=None):
+        self.canvas.bind("<Button-1>", self.square_clicked)
+    
+    def pawn_promotion_knight(self, event=None):
+        self.canvas.bind("<Button-1>", self.square_clicked)
+        board = self.chessboard
+        for key in board:
+            if key
+    """
+    
     def viable_piece_to_move(self, pos, piece=None):
+        # checks if the player can move this piece
         if pos in self.chessboard:
             piece = self.chessboard[pos]
         if piece is not None and (piece.color == self.chessboard.player_turn):
-            self.selected_piece = (self.chessboard[pos], pos)
-            self.focused = list(map(self.chessboard.num_notation, (self.chessboard[pos].available_moves(pos, self.chessboard))))
+            self.selected_piece = (piece, pos)
+            self.focused = list(map(self.chessboard.num_notation, self.chessboard.remove_king_checks(piece, (piece.available_moves(pos)))))
             
     def draw_board(self):
         current_color = self.board_color1
@@ -188,16 +182,93 @@ class GUI:
                 y0 = ((7 - x) * self.square_size) + int(self.square_size / 2)
                 self.canvas.coords(piecename, x0, y0)
 
+    def game_over(self, event=None):
+        if event:
+            # if there's an event it means the player has resigned
+            victory_label = Label(root, text="black is victorious!", font=("ariel", 26))
+            victory_label.place(relx=0.5, rely=0.5, anchor="center")
+            self.canvas.unbind("<Button-1>")
+            return
+        board = self.chessboard
+        white_no_moves = True
+        color = "white"
+        is_tie = True
 
-def main(board):
-    root = Tk()
+        for key in board:
+            if board[key].color == "white":
+                piece = board[key]
+                legal_moves = board.remove_king_checks(piece, piece.available_moves(key))
+                if legal_moves:
+                    white_no_moves = False
+                    # if white has legal moves
+                    for move in legal_moves:
+                        if move in board:
+                            if board[move].name == "K":
+                                is_tie = False
+                    color = "white"
+                    break
+
+        if white_no_moves:
+            color = "black"
+
+        for key in board:
+            if board[key].color == "black":
+                piece = board[key]
+                legal_moves = board.remove_king_checks(piece, piece.available_moves(key))
+                if legal_moves:
+                    # if black has legal moves
+                    for move in legal_moves:
+                        if move in board:
+                            if board[move].name == "K":
+                                is_tie = False
+                    color = "black"
+                    # black and white can move => white has resigned
+                    break
+
+        # checks if it's a draw or a checkmate
+        board = deepcopy(board)
+        board.player_turn = color
+        for key in board:
+            if board[key].color == color:
+                piece = board[key]
+                legal_moves = piece.available_moves(key)
+                for move in legal_moves:
+                    if move in board:
+                        if board[move].name == "K":
+                            is_tie = False
+
+        if is_tie:
+            tie_label = Label(root, text="Draw!", font=("ariel", 26))
+            tie_label.place(relx=0.5, rely=0.5, anchor="center")
+        else:
+            victory_label = Label(root, text=color + " is victorious!", font=("ariel", 26))
+            victory_label.place(relx=0.5, rely=0.5, anchor="center")
+        self.canvas.unbind("<Button-1>")
+
+
+def print_rules():
+    rules = open("Rules.txt", "r", encoding="utf-8")
+    rules = rules.read()
+    root.rules_label = Label(root, text=rules)
+    root.rules_label.pack()
+    root.bind('<Return>', start_game)
+
+
+def start_game(event=None):
+    root.rules_label.destroy()
+    board = Chessboard.Board()
     root.title("Chess")
     gui = GUI(root, board)
     gui.draw_board()
     gui.draw_pieces()
+
+
+def main():
+    root.title("Chess")
+    print_rules()
     root.mainloop()
 
 
+root = Tk()
 if __name__ == "__main__":
-    game = chessboard.Board()
-    main(game)
+    main()
