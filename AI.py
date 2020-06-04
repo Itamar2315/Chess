@@ -27,8 +27,12 @@ class AI:
             score += self.sign[color] * self.piece_value[name]
             if name == "P":
                 pos = board.num_notation(coord)
-                score += 50 - (abs(pos[0] - 3.5) + abs(pos[1] - 3.5))
-
+                score += 70 - (10 * (abs(pos[0] - 3.5) + abs(pos[1] - 3.5)))
+                # max distance will make this expression 0
+            elif name == "N":
+                pos = board.num_notation(coord)
+                score += 0.5 * (70 - (10 * (abs(pos[0] - 3.5) + abs(pos[1] - 3.5))))
+                # knights are also good in the center but less than pawns
         return score
 
     def minimax(self, board, depth, color, alpha, beta):
