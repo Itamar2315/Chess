@@ -1,13 +1,11 @@
 from tkinter import *
 import Chessboard
-import Pieces
+import Piece
 from copy import deepcopy
 from AI import *
 
 
 class GUI:
-    turn = "white"
-    pieces = {}
     selected_piece = None
     focused = None
     pictures = {}
@@ -56,7 +54,7 @@ class GUI:
         start_game()
 
     def shift(self, pos1, pos2, dest_piece=None):
-        # shift from selected piece to Chessboard class
+        # shift from selected piece to Board class
         piece = self.chessboard[pos1]
         if pos2 in self.chessboard:
             dest_piece = self.chessboard[pos2]
@@ -70,9 +68,8 @@ class GUI:
                     self.draw_board()
                     self.draw_pieces()
                     self.pawn_promotion()
-                self.turn = ('white' if piece.color == 'black' else 'black')
                 self.info_label[
-                    "text"] = '' + piece.color.capitalize() + ": " + pos1 + "->" + pos2 + ",    " + self.turn.capitalize() + \
+                    "text"] = '' + piece.color.capitalize() + ": " + pos1 + "->" + pos2 + ",    " + self.chessboard.player_turn.capitalize() + \
                               "\'s turn"
 
     def square_clicked(self, event=None):
@@ -112,20 +109,18 @@ class GUI:
             self.chessboard = og
             ai = AI(self.chessboard)
             move = ai.ai_play()
-            self.turn = "white"
             self.info_label[
-                "text"] = '' + "Black: " + move + ",    " + self.turn.capitalize() + \
+                "text"] = '' + "Black: " + move + ",    " + self.chessboard.player_turn.capitalize() + \
                           "\'s turn"
             self.selected_piece = None
             self.focused = None
-            self.pieces = {}
             self.draw_board()
             self.draw_pieces()
             if self.chessboard.is_game_over():
                 self.game_over()
 
+
     def pawn_promotion(self):
-        print("promo")
         self.canvas.unbind("<Button-1>")
         self.promotion_frame = Frame(root)
         self.promotion_frame.place(relx=0.5, rely=0.5, anchor="center")
@@ -135,13 +130,14 @@ class GUI:
 
         queen_button = Button(self.promotion_frame, text="Queen")
         queen_button.grid(row=1, column=0)
-        queen_button.bind("<Button-1>", self.pawn_promotion_quinn)
+        queen_button.bind("<Button-1>", self.pawn_promotion_queen)
 
         knight_button = Button(self.promotion_frame, text="Knight")
         knight_button.grid(row=1, column=1)
         knight_button.bind("<Button-1>", self.pawn_promotion_knight)
 
-    def pawn_promotion_quinn(self, event=None):
+
+    def pawn_promotion_queen(self, event=None):
         self.canvas.unbind("<Button-1>")
         self.canvas.bind("<Button-1>", self.square_clicked)
         self.promotion_frame.destroy()
@@ -149,7 +145,7 @@ class GUI:
         for key in board:
             # only white player can choose
             if key[1] == '8' and board[key].name == "P":
-                board[key] = Pieces.create_piece_instance('Q', "white", board)
+                board[key] = Piece.create_piece_instance('Q', "white", board)
 
         for coord in self.chessboard:
             # updating piece's board
@@ -169,7 +165,7 @@ class GUI:
         board = self.chessboard
         for key in board:
             if key[1] == '8' and board[key].name == "P":
-                board[key] = Pieces.create_piece_instance('N', "white", board)
+                board[key] = Piece.create_piece_instance('N', "white", board)
 
         self.draw_pieces()
         for coord in self.chessboard:

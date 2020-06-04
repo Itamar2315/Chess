@@ -1,7 +1,7 @@
 from copy import deepcopy
 import re
 from AI import *
-import Pieces
+import Piece
 
 # First letters of the different pieces in the correct order.
 
@@ -152,13 +152,13 @@ class Board(dict):
 
                     else:
                         del self[pos2]
-                        self[pos2] = Pieces.create_piece_instance('Q', piece.color, self)
+                        self[pos2] = Piece.create_piece_instance('Q', piece.color, self)
                         self.promoted_now = True
 
             elif pos2[1] == '1':
                 # pawn becomes queen
                 del self[pos2]
-                self[pos2] = Pieces.create_piece_instance('Q', piece.color, self)
+                self[pos2] = Piece.create_piece_instance('Q', piece.color, self)
                 return
 
         if piece.name == 'K' and piece.didnt_move:
@@ -235,7 +235,7 @@ class Board(dict):
                     continue
 
                 coord = self.alpha_notation((7 - x, y))
-                self[coord] = Pieces.create_piece_instance(char)
+                self[coord] = Piece.create_piece_instance(char)
                 self[coord].place(self)
 
         if pattern[1] == 'w':
