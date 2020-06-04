@@ -1,10 +1,9 @@
 class AI:
-    depth = 2
-    is_opening = False
+    depth = 3
+    #is_opening = False
 
     def __init__(self, board):
         self.board = board
-        self.moves = self.board.all_boards("black")
 
     sign = {
         "white": -1,
@@ -15,7 +14,7 @@ class AI:
         "K": 10000,
         "Q": 900,
         "R": 500,
-        "B": 340,
+        "B": 300,
         "N": 300,
         "P": 100
     }
@@ -28,11 +27,11 @@ class AI:
             score += self.sign[color] * self.piece_value[name]
             if name == "P":
                 pos = board.num_notation(coord)
-                score += 70 - (abs(pos[0] - 3.5) + abs(pos[1] - 3.5))
+                score += 50 - (abs(pos[0] - 3.5) + abs(pos[1] - 3.5))
 
         return score
 
-    def minimax_no_board(self, board, depth, color, alpha, beta):
+    def minimax(self, board, depth, color, alpha, beta):
         if depth == 0:
             return self.scoring(board)
 
@@ -40,7 +39,7 @@ class AI:
             boards = board.all_boards("black")
             max_score = float("-inf")
             for board in boards:
-                score = self.minimax_no_board(board, depth - 1, "white", alpha, beta)
+                score = self.minimax(board, depth - 1, "white", alpha, beta)
                 max_score = max(score, max_score)
                 alpha = max(alpha, max_score)
                 if beta <= alpha:
@@ -51,14 +50,14 @@ class AI:
             boards = board.all_boards("white")
             min_score = float("inf")
             for board in boards:
-                score = self.minimax_no_board(board, depth - 1, "black", alpha, beta)
+                score = self.minimax(board, depth - 1, "black", alpha, beta)
                 min_score = min(score, min_score)
                 beta = min(beta, min_score)
                 if beta <= alpha:
                     break
             return min_score
 
-    def minimax(self, board, depth, color, alpha, beta):
+    def minimax_board(self, board, depth, color, alpha, beta):
         if depth == 0:
             return self.scoring(board), board
 
@@ -67,7 +66,7 @@ class AI:
             best_board = boards[0]
             max_score = float("-inf")
             for board in boards:
-                score = self.minimax(board, depth - 1, "white", alpha, beta)[0]
+                score = self.minimax_board(board, depth - 1, "white", alpha, beta)[0]
                 if score > max_score:
                     max_score = score
                     best_board = board
@@ -81,7 +80,7 @@ class AI:
             best_board = boards[0]
             min_score = float("inf")
             for board in boards:
-                score = self.minimax(board, depth - 1, "black", alpha, beta)[0]
+                score = self.minimax_board(board, depth - 1, "black", alpha, beta)[0]
                 if score < min_score:
                     min_score = score
                     best_board = board
@@ -102,22 +101,30 @@ class AI:
                 open_board[destination] = piece
                 opening.append(open_board)
         """
-        """
+        num_of_available_moves = 0
+        for key in self.board:
+            num_of_available_moves += len(self.board[key].available_moves(key))
+        self.depth = 6 - (num_of_available_moves // 10)
+        # maximum of depth 6, for every 10 moves of moves reduce depth
+        if self.depth < 2:
+            self.depth = 2
+            # minimum of depth 2
         moves = self.board.all_boards("black")
         best_score = float("-inf")
         best_move = moves[0]
-        print("depth = ", self.depth)
         for move in moves:
-            move.captured_pieces = move.missing_pieces("black")
-            score = self.minimax_no_board(move, self.depth, "white", float("-inf"), float("inf"))
+            score = self.minimax(move, self.depth, "white", float("-inf"), float("inf"))
             if score > best_score:
                 best_score = score
                 best_move = move
         """
-
-        self.depth = 3 + (32 - len(self.board)) // 4
-        # after 4 pieces have been captured increase depth by 1
+        num_of_available_moves = 0
+        for key in self.board:
+            num_of_available_moves += len(self.board[key].available_moves(key))
+        self.depth = 4 - (num_of_available_moves // 40)
+        # number of available moves in the beginning of the game is 20 for white and 20 for black
         best_move = self.minimax(self.board, self.depth, "black", float("-inf"), float("inf"))[1]
+        """
         pos = ""
         for coord in self.board:
             if coord not in best_move:

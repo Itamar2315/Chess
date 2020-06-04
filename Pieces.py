@@ -1,5 +1,6 @@
 import sys
 
+
 def create_piece_instance(piece, color="black", board=None):
     """Receives a piece name and returns an instance of it"""
     if piece is (None or ' '):
@@ -25,10 +26,6 @@ class Piece(object):
     }
 
     def __init__(self, color, board=None):
-        if color == "black":
-            self.name = self.name.upper()
-        elif color == "white":
-            self.name = self.name.upper()
         self.color = color
         self.board = board
 
@@ -76,7 +73,7 @@ class Piece(object):
                     moves.append(self.board.num_notation("G8"))
         return moves
 
-    def available_moves(self, pos, line_movemant, diagonal_movemant, distance):
+    def piece_moves(self, pos, line_movemant, diagonal_movemant, distance):
         """receives a set of variables and return the possible moves of each piece"""
         enemy = ("white" if self.color == "black" else "black")
         board = self.board
@@ -95,8 +92,7 @@ class Piece(object):
             for single_move in range(1, distance + 1):
                 """iterating over all possible moves in a specific line/diagonal """
                 destination = starting_pos[0] + single_move * x, starting_pos[1] + single_move * y
-                if board.alpha_notation(destination) not in board.occupied(self.color) and \
-                        board.in_board(destination):
+                if board.alpha_notation(destination) not in board.occupied(self.color) and board.in_board(destination):
                     moves.append(destination)
                     if board.alpha_notation(destination) in board.occupied(enemy):
                         break
@@ -105,7 +101,7 @@ class Piece(object):
         if self.name == "K":
             moves = moves + self.castle(pos)
         return list(map(board.alpha_notation, moves))
-        # instead of iterating over moves and alpha_notation it with map
+        # instead of iterating over moves and using alpha_notation on its values we can use map
 
 
 class King(Piece):
@@ -113,14 +109,14 @@ class King(Piece):
     didnt_move = True
 
     def available_moves(self, pos):
-        return super(King, self).available_moves(pos.upper(), True, True, 1)
+        return super(King, self).piece_moves(pos.upper(), True, True, 1)
 
 
 class Queen(Piece):
     name = "Q"
 
     def available_moves(self, pos):
-        return super(Queen, self).available_moves(pos.upper(), True, True, 8)
+        return super(Queen, self).piece_moves(pos.upper(), True, True, 8)
 
 
 class Rook(Piece):
@@ -128,14 +124,14 @@ class Rook(Piece):
     didnt_move = True
 
     def available_moves(self, pos):
-        return super(Rook, self).available_moves(pos.upper(), True, False, 8)
+        return super(Rook, self).piece_moves(pos.upper(), True, False, 8)
 
 
 class Bishop(Piece):
     name = "B"
 
     def available_moves(self, pos):
-        return super(Bishop, self).available_moves(pos.upper(), False, True, 8)
+        return super(Bishop, self).piece_moves(pos.upper(), False, True, 8)
 
 
 class Knight(Piece):
@@ -165,7 +161,7 @@ class Pawn(Piece):
         if self.color == "white":
             regular_move = (1, 0)
             first_move = (2, 0)
-            capture = ((1, -1), (1, 1))
+            capture = ((1, 1), (1, -1))
             if pos[1] == "2":
                 didnt_move = True
         else:

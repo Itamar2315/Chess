@@ -8,15 +8,11 @@ import Pieces
 
 class Board(dict):
     y_values = ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H')
-    x_values = (1, 2, 3, 4, 5, 6, 7, 8)
-    # captured_pieces = {'white': [], 'black': []}
-    captured_pieces = []
     player_turn = None
-    halfmove_clock = 0
-    fullmove_number = 1
-    history = []
     START_PATTERN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 1'
     pattern_list = START_PATTERN.split(" ")
+    promoted_now = False
+    promote_pawn = False
 
     def __init__(self):
         """creates the starting board"""
@@ -24,13 +20,6 @@ class Board(dict):
         self.show(self.pattern_list)
         #ai = AI(self)
         #print(ai.scoring(self))
-
-    def tolist(self, color):
-        lst = []
-        for coord in self:
-            if self[coord].color == color:
-                lst.append(str(coord) + ": " + self[coord].name)
-        return lst
 
     def is_game_over(self):
         color = self.player_turn
@@ -43,6 +32,7 @@ class Board(dict):
                     return False
         return True
 
+    """
     def missing_pieces(self, color):
         if len(self) == 32:
             return []
@@ -56,6 +46,7 @@ class Board(dict):
             for i in range(start[key] - current[key]):
                 missing.append(key)
         return missing
+    """
 
     def all_boards(self, color):
         """ returns all the available boards(after moving) for a board"""
@@ -69,6 +60,14 @@ class Board(dict):
                     board = deepcopy(self)
                     board.move(coord, move, False)
                     boards.append(board)
+                    """
+                    if board.promoted_now:
+                        pos = move
+                        board[pos] = Pieces.create_piece_instance('N', color, self)
+                        # move
+                        boards.append(board)
+                        self.promoted_now = False
+                    """
         return boards
 
     def remove_king_checks(self, piece, moves):
@@ -103,6 +102,7 @@ class Board(dict):
         return moves
 
     def shift(self, p1, p2, not_ai_turn):
+        # checks its the player's and if his move is valid
         p1, p2 = p1.upper(), p2.upper()
         piece = self[p1]
 
@@ -133,22 +133,27 @@ class Board(dict):
                 if pos2[1] == '8':
                     if not_ai_turn:
                         # pawn promotion
+                        """
                         del self[pos2]
                         print("Write your preferable piece, Q/KN")
                         prefer = ""
-                        while prefer != 'Q' or "KN":
+                        while prefer != 'Q' and prefer != 'KN':
                             prefer = input()
                             if prefer == 'Q':
                                 self[pos2] = Pieces.create_piece_instance('Q', piece.color, self)
-                            elif prefer == "KN":
+                            elif prefer == 'KN':
                                 self[pos2] = Pieces.create_piece_instance('N', piece.color, self)
                             else:
                                 print("Please type your preference again")
-                        self[pos2] = Pieces.create_piece_instance('Q', piece.color, self)
+                        """
+                        self.player_turn = piece.color
+                        self.promote_pawn = True
                         return
+
                     else:
                         del self[pos2]
                         self[pos2] = Pieces.create_piece_instance('Q', piece.color, self)
+                        self.promoted_now = True
 
             elif pos2[1] == '1':
                 # pawn becomes queen
@@ -195,16 +200,14 @@ class Board(dict):
         if piece.name == 'R':
             piece.didnt_move = False
 
-        self.player_turn = enemy
-
     def alpha_notation(self, coords):
-        """receives numbered coordinates and returns its place on the board (6,6) = ('G', 7)"""
+        """receives numbered coordinates and returns its place on the board (6,6) = 'G7' """
         if not (0 <= coords[0] <= 7 and 0 <= coords[1] <= 7):
             return None
         return self.y_values[int(coords[1])] + str(int(coords[0]) + 1)
 
     def num_notation(self, coord):
-        """receives lettered coordinates and returns its place on the matrix (G7 = (6, 6))"""
+        """receives lettered coordinates and returns its place on the matrix 'G7' = (6, 6)"""
         return int(coord[1]) - 1, self.y_values.index(coord[0])
 
     def occupied(self, color):
@@ -221,7 +224,7 @@ class Board(dict):
         self.clear()
 
         def expand(match):
-            # encapsulate expand, expand returns num * ' '  based on the num in the re
+            # encapsulate expand, expand returns (num * ' ', 3 = '   ') based on the num in the re
             return ' ' * int(match.group(0))
 
         pattern[0] = re.compile(r'\d').sub(expand, pattern[0])
